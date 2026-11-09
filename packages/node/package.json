@@ -1,0 +1,57 @@
+{
+  "name": "@bahari/node",
+  "version": "0.3.0",
+  "description": "Sign in with Bahari Accounts from Node.js: OIDC + PKCE for customers, Bahari admin SSO, session rechecks, back-channel logout, platform switcher, wallet links and platform APIs.",
+  "license": "MIT",
+  "author": "Bahari",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./return-path": {
+      "import": {
+        "types": "./dist/esm/return-path.d.ts",
+        "default": "./dist/esm/return-path.js"
+      },
+      "require": {
+        "types": "./dist/cjs/return-path.d.ts",
+        "default": "./dist/cjs/return-path.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "bahari",
+    "sso",
+    "oidc",
+    "oauth2",
+    "pkce",
+    "express",
+    "authentication"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node scripts/write-cjs-package.mjs",
+    "test": "node --test \"test/**/*.test.mjs\""
+  }
+}

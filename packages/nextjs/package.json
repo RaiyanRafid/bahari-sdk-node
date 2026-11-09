@@ -1,0 +1,54 @@
+{
+  "name": "@bahari/nextjs",
+  "version": "0.3.0",
+  "description": "Bahari Accounts sign-in for Next.js App Router: catch-all route handlers, server-component sessions and a middleware gate. Built on @bahari/node.",
+  "license": "MIT",
+  "author": "Bahari",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "default": "./dist/middleware.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "bahari",
+    "sso",
+    "oidc",
+    "nextjs",
+    "app-router",
+    "authentication"
+  ],
+  "dependencies": {
+    "@bahari/node": "0.3.0"
+  },
+  "peerDependencies": {
+    "next": ">=14"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "test": "node --test \"test/**/*.test.mjs\""
+  }
+}

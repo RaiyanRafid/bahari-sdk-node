@@ -1,0 +1,29 @@
+{
+  "name": "bahari-sdk-node",
+  "private": true,
+  "version": "0.1.0",
+  "description": "JavaScript and TypeScript SDKs for Bahari Accounts (workspace root, not published).",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/node",
+    "packages/nextjs",
+    "packages/react"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "clean": "npm run clean --workspaces"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
