@@ -345,7 +345,7 @@ export class BahariClient {
     return Object.keys(query).length === 0 ? url : `${url}${url.includes('?') ? '&' : '?'}${search}`;
   }
 
-  async walletUrl(returnTo: string | null = null): Promise<string> {
+  async walletUrl(returnTo: string | null = null, amount: string | null = null): Promise<string> {
     const query: Record<string, string> = {};
     if (this.config.platform) {
       query.platform = this.config.platform;
@@ -353,8 +353,23 @@ export class BahariClient {
     if (returnTo) {
       query.return_to = returnTo;
     }
+    if (amount) {
+      query.amount = amount;
+    }
 
     return this.url('client.wallet_url', query);
+  }
+
+  checkoutOptions(externalUserId: string): Promise<Record<string, any>> {
+    return this.api('GET', `platform-wallets/${encodeURIComponent(externalUserId)}/checkout-options`, {}, 'wallet:read');
+  }
+
+  startTopUp(externalUserId: string, topUp: Record<string, unknown>): Promise<Record<string, any>> {
+    return this.api('POST', `platform-wallets/${encodeURIComponent(externalUserId)}/top-ups`, topUp, 'wallet:debit');
+  }
+
+  topUp(externalUserId: string, reference: string): Promise<Record<string, any>> {
+    return this.api('GET', `platform-wallets/${encodeURIComponent(externalUserId)}/top-ups/${encodeURIComponent(reference)}`, {}, 'wallet:read');
   }
 
   /**
