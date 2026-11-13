@@ -11,7 +11,7 @@ test('the package resolves for both import and require, with the same API', asyn
     assert.equal(typeof esm[name], 'function', `esm ${name}`);
     assert.equal(typeof cjs[name], 'function', `cjs ${name}`);
   }
-  assert.equal(esm.SDK, '@bahari/node/0.3.0');
+  assert.equal(esm.SDK, '@bahari/node/0.4.0');
   assert.equal(cjs.VERSION, require('../package.json').version);
 });
 

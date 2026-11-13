@@ -15,6 +15,8 @@ export { KINDS } from './types.js';
 export type {
   AdminAccess,
   BahariProfile,
+  PlatformBranding,
+  Role,
   Identity,
   Kind,
   Logger,

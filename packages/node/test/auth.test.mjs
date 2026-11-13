@@ -291,6 +291,20 @@ describe('Back-channel logout', () => {
     assert.equal(revoked.length, 2);
   });
 
+  test('also ends admin sessions linked to the account (losing admin access)', async () => {
+    const store = new MemoryStore();
+    const { auth } = setup({ sessionStore: store });
+    const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+    const linked = await store.create({ kind: 'admin', subject: ADMIN_ID, tokens: { session_token: 's'.repeat(64) }, profile: { id: ADMIN_ID, user_id: SUBJECT, role: 'ADMIN' }, accessExpiresAt: null, expiresAt });
+    const other = await store.create({ kind: 'admin', subject: OTHER, tokens: { session_token: 't'.repeat(64) }, profile: { id: OTHER, user_id: OTHER, role: 'ADMIN' }, accessExpiresAt: null, expiresAt });
+    const browser = new Browser(auth);
+    const response = await browser.post('/auth/backchannel-logout', { headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ logout_token: jwt({ jti: 'logout-admin', events: LOGOUT_EVENT }) }).toString() });
+
+    assert.equal(response.status, 200);
+    assert.equal(await store.find(linked.id, 'admin'), null);
+    assert.notEqual(await store.find(other.id, 'admin'), null);
+  });
+
   test('invalid, missing and oversized logout tokens are rejected', async () => {
     const { browser } = setup();
     const form = { 'content-type': 'application/x-www-form-urlencoded' };

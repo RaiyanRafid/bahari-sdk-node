@@ -19,7 +19,7 @@ import { type BahariSession, type FetchLike, type Kind, type PinnedResult, fetch
 
 export * from './core.js';
 
-export const VERSION = '0.3.0';
+export const VERSION = '0.4.0';
 
 export type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 

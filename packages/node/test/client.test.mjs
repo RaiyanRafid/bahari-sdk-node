@@ -391,3 +391,34 @@ describe('Navigation, pinned platforms, wallet and platform APIs', () => {
     await assert.rejects(bahari.completeLogin({ ...login.transaction, createdAt: login.transaction.createdAt - 601 }, 'code'), /expired/);
   });
 });
+
+describe('0.4.0: role, branding and maintenance', () => {
+  test('branding and maintenance are cached and fall back to the last good copy', async () => {
+    const cache = new MemoryCache();
+    const data = { name: 'Bahari Reseller', access_mode: 'hybrid', brand_color: '#0EA5E9', maintenance: { enabled: true, message: 'Back by 3 PM.' }, support: { email: 'help@reseller.test', phone: null, url: null } };
+    const fake = new FakeFetch({ [DISCOVERY]: reply(discovery()), [`GET ${ISSUER}/api/v1/platform-branding/reseller`]: reply({ data }) });
+    const bahari = client(fake, { cache });
+
+    assert.equal((await bahari.branding()).name, 'Bahari Reseller');
+    assert.deepEqual(await bahari.maintenance(), { enabled: true, message: 'Back by 3 PM.' });
+    assert.equal((await bahari.branding()).support.email, 'help@reseller.test');
+    assert.equal(fake.sent.length, 2, 'Branding is cached.');
+
+    await cache.delete(`bahari:branding:${sha(`${ISSUER}|reseller`)}`);
+    const offline = client(new FakeFetch({ [DISCOVERY]: reply(discovery()) }), { cache });
+    assert.equal((await offline.maintenance()).enabled, true, 'The last good copy is used when Bahari cannot be reached.');
+    assert.deepEqual(await client(new FakeFetch({ [DISCOVERY]: reply(discovery()) })).maintenance(), { enabled: false, message: null });
+  });
+
+  test('role reports admin rights from Bahari', () => {
+    const bahari = client(new FakeFetch({}));
+    const customer = { kind: 'client', subject: SUBJECT, profile: profile() };
+    const wouldBeAdmin = { kind: 'client', subject: SUBJECT, profile: profile({ admin_access: { platform: 'reseller', role: 'ADMIN', two_factor_ready: true } }) };
+    const otherPlatform = { kind: 'client', subject: SUBJECT, profile: profile({ admin_access: { platform: 'sms', role: 'SUPER_ADMIN', two_factor_ready: true } }) };
+    const admin = { kind: 'admin', subject: ADMIN_ID, profile: adminProfile({ role: 'SUPER_ADMIN' }) };
+
+    assert.deepEqual([customer, wouldBeAdmin, otherPlatform, admin].map((identity) => bahari.role(identity)), ['USER', 'ADMIN', 'USER', 'SUPER_ADMIN']);
+    assert.deepEqual([customer, wouldBeAdmin, admin].map((identity) => bahari.isAdmin(identity)), [false, false, true]);
+    assert.deepEqual([BahariClient.linkedUserId(customer), BahariClient.linkedUserId(admin)], [SUBJECT, SUBJECT]);
+  });
+});

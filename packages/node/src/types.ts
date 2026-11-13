@@ -1,6 +1,22 @@
 /** "client" signs in customers (OIDC + PKCE). "admin" signs in platform administrators (Bahari admin SSO). */
 export type Kind = 'client' | 'admin';
 
+/** A person's role in the app, decided by Bahari from the platform's Access & RBAC settings. */
+export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'USER';
+
+/** The app's branding, access mode, maintenance state and support contact as set in Bahari. */
+export interface PlatformBranding {
+  name: string | null;
+  access_mode: 'hybrid' | 'admin_only' | (string & {});
+  logo_url: string | null;
+  logo_light_url: string | null;
+  logo_dark_url: string | null;
+  favicon_url: string | null;
+  brand_color: string | null;
+  maintenance: { enabled: boolean; message: string | null };
+  support: { email: string | null; phone: string | null; url: string | null };
+}
+
 export const KINDS: readonly Kind[] = ['client', 'admin'];
 
 /** Present on a customer profile when the account is linked to an administrator of this app's platform. */

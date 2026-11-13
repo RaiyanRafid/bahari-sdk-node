@@ -35,6 +35,11 @@ export interface SessionStore {
   revoke(id: string): Promise<void>;
   /** Ends every active session of this Bahari account and kind (back-channel logout). */
   revokeSubject(kind: Kind, subject: string): Promise<void>;
+  /**
+   * Optional: ends the admin sessions whose profile user_id is this Bahari account. Bahari's back-channel logout
+   * names the account when someone loses admin access; without this, admin sessions end at their next check.
+   */
+  revokeLinkedUser?(userId: string): Promise<void>;
 }
 
 /** In-process SessionStore for development, tests and single-process apps. */
@@ -79,6 +84,14 @@ export class MemoryStore implements SessionStore {
   async revokeSubject(kind: Kind, subject: string): Promise<void> {
     for (const session of this.sessions.values()) {
       if (session.kind === kind && session.subject === subject && session.revokedAt === null) {
+        session.revokedAt = this.now();
+      }
+    }
+  }
+
+  async revokeLinkedUser(userId: string): Promise<void> {
+    for (const session of this.sessions.values()) {
+      if (session.kind === 'admin' && session.profile?.user_id === userId && session.revokedAt === null) {
         session.revokedAt = this.now();
       }
     }

@@ -546,6 +546,10 @@ export class BahariAuth {
         return;
       }
       await this.sessions.revokeSubject('client', claims.sub);
+      // Bahari also sends this when someone loses admin access to the app: end their admin sessions too.
+      if (typeof this.sessions.revokeLinkedUser === 'function') {
+        await this.sessions.revokeLinkedUser(String(claims.sub));
+      }
       await this.stateStore.set(key, true, 300);
     });
 

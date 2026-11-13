@@ -1,6 +1,6 @@
 {
   "name": "@bahari/node",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Sign in with Bahari Accounts from Node.js: OIDC + PKCE for customers, Bahari admin SSO, session rechecks, back-channel logout, platform switcher, wallet links and platform APIs.",
   "license": "MIT",
   "author": "Bahari",

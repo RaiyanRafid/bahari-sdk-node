@@ -12,6 +12,8 @@ import {
   type LoginRequest,
   type LoginTransaction,
   type Logger,
+  type PlatformBranding,
+  type Role,
   type SdkStatus,
   type TokenClaims,
   type Tokens,
@@ -27,7 +29,7 @@ export interface BahariClientOptions {
   fetch?: FetchLike;
   /** Discovery, JWKS and machine tokens. Defaults to an in-process MemoryCache. */
   cache?: BahariCache;
-  /** Sent as X-Bahari-SDK so Bahari can tell you when the package is outdated. Default "@bahari/node/0.3.0". */
+  /** Sent as X-Bahari-SDK so Bahari can tell you when the package is outdated. Default "@bahari/node/0.4.0". */
   sdk?: string;
   /** Encrypts cached machine tokens (recommended with a shared cache). */
   seal?: (value: string) => MaybePromise<string>;
@@ -291,6 +293,79 @@ export class BahariClient {
   }
 
   /**
+   * The person's role in this app: SUPER_ADMIN, ADMIN or USER. Admin sessions carry their role; a customer session
+   * is USER unless Bahari reports admin access to this platform (then send them on to admin sign-in).
+   */
+  role(identity: Pick<Identity, 'kind' | 'profile'>): Role {
+    const profile = identity.profile ?? ({} as BahariProfile);
+    let role: unknown = 'USER';
+    if (identity.kind === 'admin') {
+      role = profile.role ?? 'ADMIN';
+    } else {
+      const access = profile.admin_access;
+      if (isObject(access) && access.platform === this.config.platform && (access.role === 'ADMIN' || access.role === 'SUPER_ADMIN')) {
+        role = access.role;
+      }
+    }
+
+    return role === 'SUPER_ADMIN' || role === 'ADMIN' ? role : 'USER';
+  }
+
+  /** True for an administrator session of this app (not for a customer who merely could become one). */
+  isAdmin(identity: Pick<Identity, 'kind' | 'profile'>): boolean {
+    return identity.kind === 'admin' && this.role(identity) !== 'USER';
+  }
+
+  /**
+   * The Bahari account a back-channel logout is about: the customer subject, or the linked user of an admin session.
+   */
+  static linkedUserId(identity: Pick<Identity, 'kind' | 'subject' | 'profile'>): string {
+    return identity.kind === 'admin' ? String(identity.profile?.user_id ?? '') : identity.subject;
+  }
+
+  /**
+   * The app's branding, access mode, maintenance state and support contact from Bahari (Connected apps › Branding /
+   * Access). Public, cached for `ttl` seconds; the last good copy is used when Bahari cannot be reached.
+   */
+  async branding(platform: string | null = null, ttl = 60): Promise<PlatformBranding> {
+    const key = platform ?? this.config.platform;
+    if (typeof key !== 'string' || !/^[a-z0-9_-]{1,80}$/.test(key)) {
+      throw new BahariError('Set the platform key (BAHARI_PLATFORM_KEY) to read branding.');
+    }
+    const defaults: PlatformBranding = {
+      name: null, access_mode: 'hybrid', logo_url: null, logo_light_url: null, logo_dark_url: null, favicon_url: null, brand_color: null,
+      maintenance: { enabled: false, message: null }, support: { email: null, phone: null, url: null },
+    };
+    const cacheKey = `bahari:branding:${sha256Hex(`${this.config.issuer}|${key}`)}`;
+    const cached = await this.cache.get(cacheKey);
+    if (isObject(cached)) {
+      return { ...defaults, ...(cached as Partial<PlatformBranding>) };
+    }
+    const template = String((await this.discovery()).get('api.platform_branding') ?? `${this.config.issuer}/api/v1/platform-branding/{key}`);
+    try {
+      const data = (await this.send('GET', template.replace('{key}', encodeURIComponent(key)), {}, null, true)).json('data');
+      if (isObject(data)) {
+        await this.cache.set(cacheKey, data, Math.max(1, ttl));
+        await this.cache.set(`${cacheKey}:last-good`, data, 604_800);
+
+        return { ...defaults, ...(data as Partial<PlatformBranding>) };
+      }
+    } catch {
+      // Fall back to the last good copy.
+    }
+    const last = await this.cache.get(`${cacheKey}:last-good`);
+
+    return { ...defaults, ...(isObject(last) ? (last as Partial<PlatformBranding>) : {}) };
+  }
+
+  /** Whether Bahari has this app in maintenance mode, with the message to show in a banner. */
+  async maintenance(platform: string | null = null): Promise<{ enabled: boolean; message: string | null }> {
+    const maintenance = (await this.branding(platform)).maintenance ?? { enabled: false, message: null };
+
+    return { enabled: Boolean(maintenance.enabled), message: typeof maintenance.message === 'string' ? maintenance.message : null };
+  }
+
+  /**
    * The platform switcher for the signed-in person. For customers the wallet link opens Bahari's wallet for this
    * platform.
    */
@@ -465,7 +540,7 @@ export class BahariClient {
     return this.tokenVerifier;
   }
 
-  /** The package and version this client reports, for example "@bahari/node/0.3.0". */
+  /** The package and version this client reports, for example "@bahari/node/0.4.0". */
   get sdkHeader(): string {
     return this.sdk;
   }

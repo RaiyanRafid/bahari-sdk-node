@@ -1,6 +1,6 @@
 {
   "name": "@bahari/nextjs",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Bahari Accounts sign-in for Next.js App Router: catch-all route handlers, server-component sessions and a middleware gate. Built on @bahari/node.",
   "license": "MIT",
   "author": "Bahari",
@@ -36,7 +36,7 @@
     "authentication"
   ],
   "dependencies": {
-    "@bahari/node": "^0.3.1"
+    "@bahari/node": "0.4.0"
   },
   "peerDependencies": {
     "next": ">=14"

@@ -124,6 +124,20 @@ Options: `new BahariClient(config, { fetch, cache, seal, unseal, logger, timeout
 redirects and time out after 10 seconds. ID and logout tokens must be RS256 with a `kid`; the JWKS is cached for 5
 minutes and fetched again once when a key is unknown.
 
+## Roles, maintenance and branding (0.4.0)
+
+```ts
+bahari.role(identity);          // 'SUPER_ADMIN' | 'ADMIN' | 'USER'
+bahari.isAdmin(identity);       // true only for an admin session of this app
+await bahari.maintenance();     // { enabled, message } — show a banner
+await bahari.branding();        // logos, favicon, brand colour, access mode and support contact
+BahariClient.linkedUserId(identity);
+```
+
+Back-channel logout now also ends admin sessions whose profile `user_id` is the account Bahari names. A custom
+`SessionStore` can implement the optional `revokeLinkedUser(userId)`; without it, admin sessions end at their next
+check with Bahari.
+
 ## Production
 
 The defaults (`MemoryStore`, `MemoryCache`) keep everything in one process. With several processes or servers:

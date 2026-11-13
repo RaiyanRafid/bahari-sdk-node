@@ -1,6 +1,6 @@
 {
   "name": "@bahari/react",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Browser components and hooks for Bahari Accounts sign-in. Talks only to your own backend (@bahari/node or @bahari/nextjs); holds no secrets and no tokens.",
   "license": "MIT",
   "author": "Bahari",
